@@ -9,24 +9,24 @@ namespace Hybird_operation
     {
         static void Main(string[] args)
         {
-            List<KeyValuePair<string, int>> list = new List<KeyValuePair<string, int>>();
             //maxRange = 100,数据的取值范围 
             //plusMaxRange = 20, 乘除法数据的取值范围
             //TotalFormulaNUM = 95, 总的生成多少道试题
             //CurrentFormulaNUM = 0, 当前生成到第几题
             //columns = 25;每列有多少行
-            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 75, CurrentFormulaNUM = 0, rows = 25;
+            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 100, rows = 25, CurrentFormulaNUM = 0;
             int answer;
-            string formula;
+            string formula, path = "d://1.xls";
+            List<KeyValuePair<string, int>> list = new List<KeyValuePair<string, int>>();
             do
             {
                 formula = CreateOuterLayerFormula(maxRange, plusMaxRange, out answer);
                 CurrentFormulaNUM++;
-                Console.WriteLine(CurrentFormulaNUM + ":" + formula + " = " + answer);
+                //Console.WriteLine(CurrentFormulaNUM + ":" + formula + " = " + answer);
                 list.Add(new KeyValuePair<string, int>(formula, answer));
             } while (TotalFormulaNUM - CurrentFormulaNUM > 0);
-            if (InsertEXCEL("d:/1.xls", list, rows))
-                Console.WriteLine("数据生成完成。");
+            if (InsertEXCEL(path, list, rows))
+                Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM));
             Console.ReadLine();
         }
 
