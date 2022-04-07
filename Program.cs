@@ -13,29 +13,49 @@ namespace Hybird_operation
             //maxRange = 100,数据的取值范围 
             //plusMaxRange = 20, 乘除法数据的取值范围
             //TotalFormulaNUM = 95, 总的生成多少道试题
-            //CurrentFormulaNUM = 0, 当前生成到第几题
             //columns = 25;每列有多少行
-            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 66, columns = 3, CurrentFormulaNUM = 0;
+            //sheetNUM = 20;共生成多少份
+            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 66, columns = 3, sheetNUM = 10;
             int answer;
-            string formula, path = "d://1.xls";
-            List<KeyValuePair<string, int>> list = new List<KeyValuePair<string, int>>();
-            do
+            string formula, path = "d://1.xls", title = "日期______ 开始时间______  结束时间______";
+            if (InsertExcels(path, title, createDATA(maxRange, plusMaxRange, TotalFormulaNUM, columns, sheetNUM), columns))
+                Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM * sheetNUM));
+        }
+        private static List<List<KeyValuePair<string, int>>> createDATA(int maxRange, int plusMaxRange, int TotalFormulaNUM, int columns, int sheetNUM)
+        {
+            List<List<KeyValuePair<string, int>>> list = new List<List<KeyValuePair<string, int>>>();
+            for (int i = 0; i < sheetNUM; i++)
             {
-                formula = CreateOuterLayerFormula(maxRange, plusMaxRange, out answer);
-                CurrentFormulaNUM++;
-                //Console.WriteLine(CurrentFormulaNUM + ":" + formula + " = " + answer);
-                list.Add(new KeyValuePair<string, int>(formula, answer));
-            } while (TotalFormulaNUM - CurrentFormulaNUM > 0);
-            if (InsertEXCEL(path, "四则混合运算的标题", list, columns))
-                Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM));
-            //Console.ReadLine();
+                List<KeyValuePair<string, int>> sheetdata = new List<KeyValuePair<string, int>>();
+                int CurrentFormulaNUM = 0;
+                do
+                {
+                    string formula = CreateOuterLayerFormula(maxRange, plusMaxRange, out int answer);
+                    CurrentFormulaNUM++;
+                    sheetdata.Add(new KeyValuePair<string, int>(formula, answer));
+                } while (TotalFormulaNUM - CurrentFormulaNUM > 0);
+                list.Add(sheetdata);
+            }
+            return list;
         }
 
-
-        private static bool InsertEXCEL(string path, string title, List<KeyValuePair<string, int>> list, int columns)
+        private static bool InsertExcels(string path, string title, List<List<KeyValuePair<string, int>>> list, int columns)
         {
             var workbook = new HSSFWorkbook();
-            var sheet1 = workbook.CreateSheet("sheet1");
+            for (int i = 0; i < list.Count; i++)
+            {
+                workbook.Add(InsertEXCEL("sheet" + i, title, list[i], columns));
+            }
+            using (var fs = File.OpenWrite(@path))
+            {
+                workbook.Write(fs);
+            }
+            return true;
+        }
+        private static ISheet InsertEXCEL(string sheetname, string title, List<KeyValuePair<string, int>> list, int columns)
+        {
+            var workbook = new HSSFWorkbook();
+            var sheet1 = workbook.CreateSheet(sheetname);
             sheet1.PrintSetup.Scale = 100;
             sheet1.PrintSetup.PaperSize = 9;
             int rows = (int)Math.Ceiling((double)list.Count / (double)columns);//计算总的包含多少行数据
@@ -92,11 +112,7 @@ namespace Hybird_operation
                     }
                 }
             }
-            using (var fs = File.OpenWrite(@path))
-            {
-                workbook.Write(fs);
-            }
-            return true;
+            return sheet1;
         }
 
 
