@@ -1,4 +1,5 @@
 ﻿using NPOI.HSSF.UserModel;
+using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace Hybird_operation
             //TotalFormulaNUM = 95, 总的生成多少道试题
             //CurrentFormulaNUM = 0, 当前生成到第几题
             //columns = 25;每列有多少行
-            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 100, rows = 25, CurrentFormulaNUM = 0;
+            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 66, columns = 3, CurrentFormulaNUM = 0;
             int answer;
             string formula, path = "d://1.xls";
             List<KeyValuePair<string, int>> list = new List<KeyValuePair<string, int>>();
@@ -25,27 +26,65 @@ namespace Hybird_operation
                 //Console.WriteLine(CurrentFormulaNUM + ":" + formula + " = " + answer);
                 list.Add(new KeyValuePair<string, int>(formula, answer));
             } while (TotalFormulaNUM - CurrentFormulaNUM > 0);
-            if (InsertEXCEL(path, list, rows))
+            if (InsertEXCEL(path, "四则混合运算的标题", list, columns))
                 Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM));
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
 
-        private static bool InsertEXCEL(string path, List<KeyValuePair<string, int>> list, int rows)
+        private static bool InsertEXCEL(string path, string title, List<KeyValuePair<string, int>> list, int columns)
         {
             var workbook = new HSSFWorkbook();
-            var table = workbook.CreateSheet("sheet1");
-            int columns = (int)Math.Ceiling((double)list.Count / (double)rows);
-            for (var i = 0; i < rows; i++)
+            var sheet1 = workbook.CreateSheet("sheet1");
+            sheet1.PrintSetup.Scale = 100;
+            sheet1.PrintSetup.PaperSize = 9;
+            int rows = (int)Math.Ceiling((double)list.Count / (double)columns);//计算总的包含多少行数据
+
+            sheet1.DefaultColumnWidth = 27;//设置默认的列宽
+            //sheet1.DefaultRowHeight = 25 * 20;//设置默认行高
+
+            var TitleRow = sheet1.CreateRow(0);//新建标题行
+            TitleRow.HeightInPoints = 60;//设置标题行的行高；
+            var Titlecell = TitleRow.CreateCell(0);
+            Titlecell.SetCellValue(title);
+            sheet1.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, columns - 1));//设置标题行合并居中
+
+            ICellStyle Titlestyle = workbook.CreateCellStyle();//其他2个样式1：用于标题行
+            ICellStyle cellStyle = workbook.CreateCellStyle();//样式2：用于其他行
+            Titlestyle.Alignment = HorizontalAlignment.Center;
+            Titlestyle.VerticalAlignment = VerticalAlignment.Center;
+            cellStyle.Alignment = HorizontalAlignment.Justify;
+            cellStyle.VerticalAlignment = VerticalAlignment.Center;
+            cellStyle.BorderTop = BorderStyle.Thin;
+            cellStyle.BorderRight = BorderStyle.Thin;
+            cellStyle.BorderBottom = BorderStyle.Thin;
+            cellStyle.BorderLeft = BorderStyle.Thin;
+
+            IFont Titlefont = workbook.CreateFont();
+            IFont font = workbook.CreateFont();
+            Titlefont.FontHeight = 20 * 20;
+            font.FontHeight = 16 * 20;
+            Titlefont.FontName = "楷体";
+            font.FontName = "宋体";
+            Titlestyle.SetFont(Titlefont);
+            cellStyle.SetFont(font);
+
+            Titlecell.CellStyle = Titlestyle;//设置标题行样式
+
+
+            for (var i = 1; i < rows + 1; i++)
             {
-                var row = table.CreateRow(i);
+                var row = sheet1.CreateRow(i);
+                row.HeightInPoints = 30;
                 for (int j = 0; j < columns; j++)
                 {
                     int currentNUM = i * columns + j;
                     if (currentNUM < list.Count)
                     {
                         var cell = row.CreateCell(j);
-                        cell.SetCellValue(currentNUM + 1 + ":" + list[currentNUM].Key + "=");
+                        //cell.SetCellValue(currentNUM + ":" + list[currentNUM].Key + "=");
+                        cell.SetCellValue(list[currentNUM].Key + "=");
+                        cell.CellStyle = cellStyle;
                     }
                     else
                     {
