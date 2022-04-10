@@ -1,26 +1,42 @@
-﻿using NPOI.HSSF.UserModel;
+﻿
+
 using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Hybird_operation
 {
     class Program
     {
+        private static Stopwatch watch = new Stopwatch();
         static void Main(string[] args)
         {
+            watch.Start();
             //maxRange = 100,数据的取值范围 
             //plusMaxRange = 20, 乘除法数据的取值范围
             //TotalFormulaNUM = 95, 总的生成多少道试题
             //columns = 25;每列有多少行
             //sheetNUM = 20;共生成多少份
-            int maxRange = 100, plusMaxRange = 10, TotalFormulaNUM = 66, columns = 3, sheetNUM = 10;
-            int answer;
-            string formula, path = "d://1.xls", title = "日期______ 开始时间______  结束时间______";
+            int maxRange = 100, plusMaxRange = 20, TotalFormulaNUM = 66, columns = 3, sheetNUM = 20;
+            string  path = "C://Users//admin//Desktop//1.xlsx", title = "日期______ 开始时间______  结束时间______";
             if (InsertExcels(path, title, createDATA(maxRange, plusMaxRange, TotalFormulaNUM, columns, sheetNUM), columns))
                 Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM * sheetNUM));
+            watch.Stop();
+            Console.WriteLine("Total time is {0} MS.", watch.ElapsedMilliseconds);
+            Console.ReadLine();
         }
+        /// <summary>
+        /// 按要求生成数据
+        /// </summary>
+        /// <param name="maxRange">生成算式的最大值</param>
+        /// <param name="plusMaxRange">乘除法算式中最大的值</param>
+        /// <param name="TotalFormulaNUM">每页生成算式的数量</param>
+        /// <param name="columns">每页算式的列数</param>
+        /// <param name="sheetNUM">生成的页数</param>
+        /// <returns></returns>
         private static List<List<KeyValuePair<string, int>>> createDATA(int maxRange, int plusMaxRange, int TotalFormulaNUM, int columns, int sheetNUM)
         {
             List<List<KeyValuePair<string, int>>> list = new List<List<KeyValuePair<string, int>>>();
@@ -36,85 +52,79 @@ namespace Hybird_operation
                 } while (TotalFormulaNUM - CurrentFormulaNUM > 0);
                 list.Add(sheetdata);
             }
+            Console.WriteLine(string.Format("Time to generate data is {0} MS. ", watch.ElapsedMilliseconds));
             return list;
         }
 
         private static bool InsertExcels(string path, string title, List<List<KeyValuePair<string, int>>> list, int columns)
         {
-            var workbook = new HSSFWorkbook();
+            var workbook = new XSSFWorkbook();
             for (int i = 0; i < list.Count; i++)
             {
-                workbook.Add(InsertEXCEL("sheet" + i, title, list[i], columns));
-            }
-            using (var fs = File.OpenWrite(@path))
-            {
-                workbook.Write(fs);
-            }
-            return true;
-        }
-        private static ISheet InsertEXCEL(string sheetname, string title, List<KeyValuePair<string, int>> list, int columns)
-        {
-            var workbook = new HSSFWorkbook();
-            var sheet1 = workbook.CreateSheet(sheetname);
-            sheet1.PrintSetup.Scale = 100;
-            sheet1.PrintSetup.PaperSize = 9;
-            int rows = (int)Math.Ceiling((double)list.Count / (double)columns);//计算总的包含多少行数据
+                var sheet = workbook.CreateSheet("sheet" + (i + 1));
+                sheet.PrintSetup.Scale = 100;
+                sheet.PrintSetup.PaperSize = 9;
+                int rows = (int)Math.Ceiling((double)list[i].Count / (double)columns);//计算总的包含多少行数据
 
-            sheet1.DefaultColumnWidth = 27;//设置默认的列宽
-            //sheet1.DefaultRowHeight = 25 * 20;//设置默认行高
+                sheet.DefaultColumnWidth = 27;//设置默认的列宽
+                                              //sheet1.DefaultRowHeight = 25 * 20;//设置默认行高
 
-            var TitleRow = sheet1.CreateRow(0);//新建标题行
-            TitleRow.HeightInPoints = 60;//设置标题行的行高；
-            var Titlecell = TitleRow.CreateCell(0);
-            Titlecell.SetCellValue(title);
-            sheet1.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, columns - 1));//设置标题行合并居中
+                var TitleRow = sheet.CreateRow(0);//新建标题行
+                TitleRow.HeightInPoints = 60;//设置标题行的行高；
+                var Titlecell = TitleRow.CreateCell(0);
+                Titlecell.SetCellValue(title);
+                sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, columns - 1));//设置标题行合并居中
 
-            ICellStyle Titlestyle = workbook.CreateCellStyle();//其他2个样式1：用于标题行
-            ICellStyle cellStyle = workbook.CreateCellStyle();//样式2：用于其他行
-            Titlestyle.Alignment = HorizontalAlignment.Center;
-            Titlestyle.VerticalAlignment = VerticalAlignment.Center;
-            cellStyle.Alignment = HorizontalAlignment.Justify;
-            cellStyle.VerticalAlignment = VerticalAlignment.Center;
-            cellStyle.BorderTop = BorderStyle.Thin;
-            cellStyle.BorderRight = BorderStyle.Thin;
-            cellStyle.BorderBottom = BorderStyle.Thin;
-            cellStyle.BorderLeft = BorderStyle.Thin;
+                ICellStyle Titlestyle = workbook.CreateCellStyle();//其他2个样式1：用于标题行
+                ICellStyle cellStyle = workbook.CreateCellStyle();//样式2：用于其他行
+                Titlestyle.Alignment = HorizontalAlignment.Center;
+                Titlestyle.VerticalAlignment = VerticalAlignment.Center;
+                cellStyle.Alignment = HorizontalAlignment.Justify;
+                cellStyle.VerticalAlignment = VerticalAlignment.Center;
+                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
 
-            IFont Titlefont = workbook.CreateFont();
-            IFont font = workbook.CreateFont();
-            Titlefont.FontHeight = 20 * 20;
-            font.FontHeight = 16 * 20;
-            Titlefont.FontName = "楷体";
-            font.FontName = "宋体";
-            Titlestyle.SetFont(Titlefont);
-            cellStyle.SetFont(font);
+                IFont Titlefont = workbook.CreateFont();
+                IFont font = workbook.CreateFont();
+                Titlefont.FontHeight = 20 * 20;
+                font.FontHeight = 16 * 20;
+                Titlefont.FontName = "楷体";
+                font.FontName = "宋体";
+                Titlestyle.SetFont(Titlefont);
+                cellStyle.SetFont(font);
 
-            Titlecell.CellStyle = Titlestyle;//设置标题行样式
+                Titlecell.CellStyle = Titlestyle;//设置标题行样式
 
-
-            for (var i = 1; i < rows + 1; i++)
-            {
-                var row = sheet1.CreateRow(i);
-                row.HeightInPoints = 30;
-                for (int j = 0; j < columns; j++)
+                for (var j = 0; j < rows + 1; j++)
                 {
-                    int currentNUM = i * columns + j;
-                    if (currentNUM < list.Count)
+                    var row = sheet.CreateRow(j + 1);//因为第一行是标题行，所以这里从1开始
+                    row.HeightInPoints = 30;
+                    for (int k = 0; k < columns; k++)
                     {
-                        var cell = row.CreateCell(j);
-                        //cell.SetCellValue(currentNUM + ":" + list[currentNUM].Key + "=");
-                        cell.SetCellValue(list[currentNUM].Key + "=");
-                        cell.CellStyle = cellStyle;
-                    }
-                    else
-                    {
-                        break;
+                        int currentNUM = j * columns + k;
+                        if (currentNUM < list[i].Count)
+                        {
+                            var cell = row.CreateCell(k);
+                            cell.SetCellValue(list[i][currentNUM].Key + "=");
+                            cell.CellStyle = cellStyle;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
             }
-            return sheet1;
+            Console.WriteLine("Time to generate EXCEL table is {0} MS.", watch.ElapsedMilliseconds);
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                workbook.Write(fs);
+            }
+            Console.WriteLine("Time to insert into hard-disk is {0} MS.", watch.ElapsedMilliseconds);
+            return true;
         }
-
 
         private static string CreateOuterLayerFormula(int maxRange, int plusMaxRange, out int answer)
         {
