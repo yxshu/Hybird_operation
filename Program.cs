@@ -20,8 +20,8 @@ namespace Hybird_operation
             //TotalFormulaNUM = 95, 总的生成多少道试题
             //columns = 25;每列有多少行
             //sheetNUM = 20;共生成多少份
-            int maxRange = 100, plusMaxRange = 20, TotalFormulaNUM = 66, columns = 3, sheetNUM = 20;
-            string  path = "C://Users//admin//Desktop//1.xlsx", title = "日期______ 开始时间______  结束时间______";
+            int maxRange = 100, plusMaxRange = 30, TotalFormulaNUM = 50, columns = 5, sheetNUM = 20;
+            string path = "C://Users//admin//Desktop//1.xlsx", title = "日期______ 开始时间______  结束时间______";
             if (InsertExcels(path, title, createDATA(maxRange, plusMaxRange, TotalFormulaNUM, columns, sheetNUM), columns))
                 Console.WriteLine(string.Format("{0} Articles Formula Generation Success。", TotalFormulaNUM * sheetNUM));
             watch.Stop();
@@ -66,11 +66,11 @@ namespace Hybird_operation
                 sheet.PrintSetup.PaperSize = 9;
                 int rows = (int)Math.Ceiling((double)list[i].Count / (double)columns);//计算总的包含多少行数据
 
-                sheet.DefaultColumnWidth = 27;//设置默认的列宽
-                                              //sheet1.DefaultRowHeight = 25 * 20;//设置默认行高
+                sheet.DefaultColumnWidth = 80 / columns;//设置默认的列宽
+                                                        //sheet1.DefaultRowHeight = 25 * 20;//设置默认行高
 
                 var TitleRow = sheet.CreateRow(0);//新建标题行
-                TitleRow.HeightInPoints = 60;//设置标题行的行高；
+                TitleRow.HeightInPoints = 30;//设置标题行的行高；
                 var Titlecell = TitleRow.CreateCell(0);
                 Titlecell.SetCellValue(title);
                 sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, columns - 1));//设置标题行合并居中
@@ -80,7 +80,7 @@ namespace Hybird_operation
                 Titlestyle.Alignment = HorizontalAlignment.Center;
                 Titlestyle.VerticalAlignment = VerticalAlignment.Center;
                 cellStyle.Alignment = HorizontalAlignment.Justify;
-                cellStyle.VerticalAlignment = VerticalAlignment.Center;
+                cellStyle.VerticalAlignment = VerticalAlignment.Top;
                 cellStyle.BorderTop = BorderStyle.Thin;
                 cellStyle.BorderRight = BorderStyle.Thin;
                 cellStyle.BorderBottom = BorderStyle.Thin;
@@ -89,7 +89,7 @@ namespace Hybird_operation
                 IFont Titlefont = workbook.CreateFont();
                 IFont font = workbook.CreateFont();
                 Titlefont.FontHeight = 20 * 20;
-                font.FontHeight = 16 * 20;
+                font.FontHeight = 15 * 20;
                 Titlefont.FontName = "楷体";
                 font.FontName = "宋体";
                 Titlestyle.SetFont(Titlefont);
@@ -100,14 +100,14 @@ namespace Hybird_operation
                 for (var j = 0; j < rows + 1; j++)
                 {
                     var row = sheet.CreateRow(j + 1);//因为第一行是标题行，所以这里从1开始
-                    row.HeightInPoints = 30;
+                    row.HeightInPoints = 690/rows;
                     for (int k = 0; k < columns; k++)
                     {
                         int currentNUM = j * columns + k;
                         if (currentNUM < list[i].Count)
                         {
                             var cell = row.CreateCell(k);
-                            cell.SetCellValue(list[i][currentNUM].Key + "=");
+                            cell.SetCellValue(list[i][currentNUM].Key);
                             cell.CellStyle = cellStyle;
                         }
                         else
@@ -130,7 +130,7 @@ namespace Hybird_operation
         {
             Random rand = new Random();
             int factora, factorb;
-            string[] opera = { "+", "-", "×", "÷" };
+            string[] opera = { "+", "-", "*", "÷" };
             int innerSubmark, submark = rand.Next(opera.Length);
             string InnerLayerFormula, Formula;
             bool isInvers = false;
@@ -213,7 +213,7 @@ namespace Hybird_operation
         {
             Random rand = new Random();
             int factora, factorb;
-            string[] opera = { "+", "-", "×", "÷" };
+            string[] opera = { "+", "-", "*", "÷" };
             submark = rand.Next(opera.Length);
             bool isInvers = false;
             do
@@ -245,7 +245,7 @@ namespace Hybird_operation
             {
                 case "+": if (Math.Min(factora, factorb) < 2) result = true; break;
                 case "-": if (Math.Min(factora, factorb) < 2) result = true; else if (factorb > factora) isverse = true; break;
-                case "×": if (factora > plusMaxRange || factorb > plusMaxRange || Math.Min(factora, factorb) < 2) result = true; break;
+                case "*": if (factora > plusMaxRange || factorb > plusMaxRange || Math.Min(factora, factorb) < 2) result = true; break;
                 case "÷":
                     if (factora > plusMaxRange || factorb > plusMaxRange || factora == factorb || Math.Min(factora, factorb) < 2) result = true;
                     else
